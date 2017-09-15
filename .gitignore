@@ -1,0 +1,12 @@
+# Mac
+.DS_Store
+
+# Python - Virtualenv
+.Python
+bin
+include
+lib
+pip-selfcheck.json
+
+# Project
+saves
