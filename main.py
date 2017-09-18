@@ -5,7 +5,6 @@ See for details:
     https://tools.ietf.org/html/draft-pantos-http-live-streaming-07
 """
 
-import code
 import os
 import pathlib
 import subprocess
@@ -21,7 +20,8 @@ ROOT = pathlib.Path(__file__).absolute().parent
 SAVES = ROOT / "saves"
 
 
-class SymmetricEncryptionError(Exception): pass
+class SymmetricEncryptionError(Exception):
+    pass
 
 
 def _decrypt(aes_key, aes_iv, ciphertext):
@@ -56,7 +56,7 @@ def test():
 
                 i += 1
                 print(f"Writing {i}")
-                data = _decrypt(key, b"\x00"*15 + bytes([i]), encrypted_data)
+                data = _decrypt(key, b"\x00" * 15 + bytes([i]), encrypted_data)
 
                 with open(f"part{i}.mpeg", 'wb') as outfile:
                     outfile.write(data)
@@ -100,7 +100,7 @@ def download_segments(master_url, name_dir):
     master_lines = master_text.split("\n#EXT-X-STREAM-INF:")
     target_line = [l for l in master_lines if "RESOLUTION=1920x1080" in l and "akamai" in l][0]
     index_url = target_line.split('\n')[1]
-    
+
     # get index file
     index_text = urllib.request.urlopen(index_url).read().decode('utf-8')
     with open(meta_dir / "index-v1-a1.m3u", 'w') as outfile:
@@ -132,7 +132,7 @@ def download_segments(master_url, name_dir):
             with open(segment_filename, 'wb') as outfile:
                 print(f"    [ ] Decrypting segment {index}...")
                 encrypted_bytes = infile.read()
-                decrypted_bytes = _decrypt(key, b"\x00"*15 + bytes([index + 1]), encrypted_bytes)
+                decrypted_bytes = _decrypt(key, b"\x00" * 15 + bytes([index + 1]), encrypted_bytes)
                 outfile.write(decrypted_bytes)
     print("[+] Done.")
 
