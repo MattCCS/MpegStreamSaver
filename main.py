@@ -7,6 +7,7 @@ See for details:
 
 import os
 import pathlib
+import ssl
 import subprocess
 import tempfile
 import concurrent.futures
@@ -18,6 +19,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 ROOT = pathlib.Path(__file__).absolute().parent
 SAVES = ROOT / "saves"
+
+
 
 
 class SymmetricEncryptionError(Exception):
@@ -52,7 +55,7 @@ def test():
     with open("index-v1-a1.m3u") as master:
         for line in master:
             if line.startswith("https://"):
-                encrypted_data = urllib.request.urlopen(line).read()
+                encrypted_data = unsafe_urlopen(line).read()
 
                 i += 1
                 print(f"Writing {i}")
@@ -70,15 +73,25 @@ def form_segment_filename(segments_dir, index):
     return segments_dir / f"seg{index}.ts"
 
 
-def download_segment(index, segment_url, filename):
+def unsafe_urlopen(url, root=None):
+    gcontext = ssl.SSLContext()
+    try:
+        return urllib.request.urlopen(url, context=gcontext)
+    except ValueError:
+        return urllib.request.urlopen(root + '/' + url, context=gcontext)
+
+
+def download_segment(index, segment_url, filename, root=None):
     print(f"[ ] Getting encrypted segment {index}...")
-    segment_bytes = urllib.request.urlopen(segment_url).read()  # NOTE: keep as bytes!
+    segment_bytes = unsafe_urlopen(segment_url, root=root).read()  # NOTE: keep as bytes!
     with open(filename, 'wb') as outfile:
         outfile.write(segment_bytes)
     print(f"[+] {index} done.")
 
 
 def download_segments(master_url, name_dir):
+    master_url_root = master_url.rsplit("/", 1)[0]
+
     meta_dir = name_dir / "meta"
     if not meta_dir.exists():
         os.mkdir(meta_dir)
@@ -92,26 +105,30 @@ def download_segments(master_url, name_dir):
         os.mkdir(segments_dir)
 
     # get master file
-    master_text = urllib.request.urlopen(master_url).read().decode('utf-8')
+    master_text = unsafe_urlopen(master_url).read().decode('utf-8')
     with open(meta_dir / "master.m3u", 'w') as outfile:
         outfile.write(master_text)
 
     # get index url
     master_lines = master_text.split("\n#EXT-X-STREAM-INF:")
-    target_line = [l for l in master_lines if "RESOLUTION=1920x1080" in l and "akamai" in l][0]
+    target_line = [l for l in master_lines if "RESOLUTION=1920x1080" in l][0]
     index_url = target_line.split('\n')[1]
 
     # get index file
-    index_text = urllib.request.urlopen(index_url).read().decode('utf-8')
+    index_text = unsafe_urlopen(index_url, root=master_url_root).read().decode('utf-8')
     with open(meta_dir / "index-v1-a1.m3u", 'w') as outfile:
         outfile.write(index_text)
 
     # get AES keyfile
-    aes_line = [l for l in index_text.splitlines() if l.startswith("#EXT-X-KEY:")][0]
-    aes_url = aes_line.split('''#EXT-X-KEY:METHOD=AES-128,URI="''')[1].rstrip('"')
-    key = urllib.request.urlopen(aes_url).read()  # NOTE: keep as bytes!
-    with open(meta_dir / "encryption.key", 'wb') as outfile:
-        outfile.write(key)
+    key = None
+    try:
+        aes_line = [l for l in index_text.splitlines() if l.startswith("#EXT-X-KEY:")][0]
+        aes_url = aes_line.split('''#EXT-X-KEY:METHOD=AES-128,URI="''')[1].rstrip('"')
+        key = unsafe_urlopen(aes_url, root=master_url_root).read()  # NOTE: keep as bytes!
+        with open(meta_dir / "encryption.key", 'wb') as outfile:
+            outfile.write(key)
+    except IndexError:
+        pass  # no key
 
     # get segment urls
     segment_lines = index_text.split("\n#EXTINF:")
@@ -121,9 +138,10 @@ def download_segments(master_url, name_dir):
     print("[ ] Downloading encrypted segments in parallel...")
     with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
         for (index, segment_url) in enumerate(segment_urls):
-            executor.submit(download_segment, index, segment_url, form_encrypted_filename(encrypted_dir, index))
+            executor.submit(download_segment, index, segment_url, form_encrypted_filename(encrypted_dir, index), master_url_root)
     print("[+] Done.")
 
+    # TODO: make this skippable
     print("[ ] Decrypting segments...")
     for index in range(segments):
         encrypted_filename = form_encrypted_filename(encrypted_dir, index)
@@ -132,7 +150,10 @@ def download_segments(master_url, name_dir):
             with open(segment_filename, 'wb') as outfile:
                 print(f"    [ ] Decrypting segment {index}...")
                 encrypted_bytes = infile.read()
-                decrypted_bytes = _decrypt(key, b"\x00" * 15 + bytes([index + 1]), encrypted_bytes)
+                if key:
+                    decrypted_bytes = _decrypt(key, b"\x00" * 15 + bytes([index + 1]), encrypted_bytes)
+                else:
+                    decrypted_bytes = encrypted_bytes
                 outfile.write(decrypted_bytes)
     print("[+] Done.")
 
