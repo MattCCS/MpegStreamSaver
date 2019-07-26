@@ -5,8 +5,10 @@ See for details:
     https://tools.ietf.org/html/draft-pantos-http-live-streaming-07
 """
 
+import argparse
 import os
 import pathlib
+import re
 import ssl
 import subprocess
 import tempfile
@@ -19,8 +21,6 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 ROOT = pathlib.Path(__file__).absolute().parent
 SAVES = ROOT / "saves"
-
-
 
 
 class SymmetricEncryptionError(Exception):
@@ -65,6 +65,24 @@ def test():
                     outfile.write(data)
 
 
+def calc_resolution(line):
+    print(line)
+    (x, y) = re.search("RESOLUTION=(\d+)x(\d+)", line).groups()
+    return int(x) * int(y)
+
+
+def audio(line):
+    return re.search('AUDIO="([^"]+)"', line).group(1)
+
+
+def group_id(line):
+    return re.search('GROUP-ID="([^"]+)"', line).group(1)
+
+
+def uri(line):
+    return re.search('URI="([^"]+)"', line).group(1)
+
+
 def form_encrypted_filename(encrypted_dir, index):
     return encrypted_dir / f"enc{index}.ts"
 
@@ -89,58 +107,15 @@ def download_segment(index, segment_url, filename, root=None):
     print(f"[+] {index} done.")
 
 
-def download_segments(master_url, name_dir):
-    master_url_root = master_url.rsplit("/", 1)[0]
-
-    meta_dir = name_dir / "meta"
-    if not meta_dir.exists():
-        os.mkdir(meta_dir)
-
-    encrypted_dir = name_dir / "encrypted"
-    if not encrypted_dir.exists():
-        os.mkdir(encrypted_dir)
-
-    segments_dir = name_dir / "segments"
-    if not segments_dir.exists():
-        os.mkdir(segments_dir)
-
-    # get master file
-    master_text = unsafe_urlopen(master_url).read().decode('utf-8')
-    with open(meta_dir / "master.m3u", 'w') as outfile:
-        outfile.write(master_text)
-
-    # get index url
-    master_lines = master_text.split("\n#EXT-X-STREAM-INF:")
-    target_line = [l for l in master_lines if "RESOLUTION=1920x1080" in l][0]
-    index_url = target_line.split('\n')[1]
-
-    # get index file
-    index_text = unsafe_urlopen(index_url, root=master_url_root).read().decode('utf-8')
-    with open(meta_dir / "index-v1-a1.m3u", 'w') as outfile:
-        outfile.write(index_text)
-
-    # get AES keyfile
-    key = None
-    try:
-        aes_line = [l for l in index_text.splitlines() if l.startswith("#EXT-X-KEY:")][0]
-        aes_url = aes_line.split('''#EXT-X-KEY:METHOD=AES-128,URI="''')[1].rstrip('"')
-        key = unsafe_urlopen(aes_url, root=master_url_root).read()  # NOTE: keep as bytes!
-        with open(meta_dir / "encryption.key", 'wb') as outfile:
-            outfile.write(key)
-    except IndexError:
-        pass  # no key
-
-    # get segment urls
-    segment_lines = index_text.split("\n#EXTINF:")
-    segment_urls = [l.split('\n')[1] for l in segment_lines][1:]
-    segments = len(segment_urls)
-
+def download_segments(segment_urls, encrypted_dir, master_url_root):
     print("[ ] Downloading encrypted segments in parallel...")
     with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
         for (index, segment_url) in enumerate(segment_urls):
             executor.submit(download_segment, index, segment_url, form_encrypted_filename(encrypted_dir, index), master_url_root)
     print("[+] Done.")
 
+
+def decrypt_segments(segments, encrypted_dir, segments_dir, key):
     # TODO: make this skippable
     print("[ ] Decrypting segments...")
     for index in range(segments):
@@ -157,29 +132,148 @@ def download_segments(master_url, name_dir):
                 outfile.write(decrypted_bytes)
     print("[+] Done.")
 
-    print("[ ] Processing final video file...")
-    with tempfile.NamedTemporaryFile() as tfile:
+
+def download_aes_key(master_url_root, index_text, meta_dir):
+    # get AES keyfile
+    key = None
+    try:
+        aes_line = [l for l in index_text.splitlines() if l.startswith("#EXT-X-KEY:")][0]
+        aes_url = aes_line.split('''#EXT-X-KEY:METHOD=AES-128,URI="''')[1].rstrip('"')
+        key = unsafe_urlopen(aes_url, root=master_url_root).read()  # NOTE: keep as bytes!
+        with open(meta_dir / "encryption.key", 'wb') as outfile:
+            outfile.write(key)
+    except IndexError:
+        pass  # no key
+
+    return key
+
+
+def concatenate_segments(path, segments, segments_dir):
+    with open(path, "wb") as outfile:
         print("    [ ] Concatenating segments...")
         for index in range(segments):
             segment_filename = form_segment_filename(segments_dir, index)
             with open(segment_filename, 'rb') as infile:
-                tfile.write(infile.read())
-        tfile.flush()
+                outfile.write(infile.read())
         print("    [+] Done.")
 
-        print("    [ ] Converting file with ffmpeg...")
-        infile_name = tfile.name
-        outfile_name = str(name_dir / name_dir.name) + ".mp4"
-        subprocess.check_output(["ffmpeg", "-i", infile_name, "-acodec", "copy", "-vcodec", "copy", outfile_name])
-        print("    [+] Done.")
+
+def download_m3u8(master_url, name_dir):
+    master_url_root = master_url.rsplit("/", 1)[0]
+
+    meta_dir = name_dir / "meta"
+    if not meta_dir.exists():
+        os.makedirs(meta_dir, exist_ok=True)
+
+    video_dir = name_dir / "video"
+    if not video_dir.exists():
+        os.makedirs(video_dir, exist_ok=True)
+
+    audio_dir = name_dir / "audio"
+    if not audio_dir.exists():
+        os.makedirs(audio_dir, exist_ok=True)
+
+    encrypted_video_dir = name_dir / "video" / "encrypted"
+    if not encrypted_video_dir.exists():
+        os.makedirs(encrypted_video_dir, exist_ok=True)
+
+    encrypted_audio_dir = name_dir / "audio" / "encrypted"
+    if not encrypted_audio_dir.exists():
+        os.makedirs(encrypted_audio_dir, exist_ok=True)
+
+    video_segments_dir = name_dir / "video" / "segments"
+    if not video_segments_dir.exists():
+        os.makedirs(video_segments_dir, exist_ok=True)
+
+    audio_segments_dir = name_dir / "audio" / "segments"
+    if not audio_segments_dir.exists():
+        os.makedirs(audio_segments_dir, exist_ok=True)
+
+    # get master file
+    master_text = unsafe_urlopen(master_url).read().decode('utf-8')
+    with open(meta_dir / "master.m3u", 'w') as outfile:
+        outfile.write(master_text)
+
+    ### VIDEO
+    # get video index url
+    master_lines = master_text.split("\n#EXT-X-STREAM-INF:")[1:]
+    target_line = max(master_lines, key=lambda l: calc_resolution(l))
+    print(f"Target video line: {target_line}")
+    video_index_url = target_line.split('\n')[1]
+
+    # get video index file
+    video_index_text = unsafe_urlopen(video_index_url, root=master_url_root).read().decode('utf-8')
+    with open(meta_dir / "video-index-v1-a1.m3u", 'w') as outfile:
+        outfile.write(video_index_text)
+
+    # get video segment urls
+    video_segment_lines = video_index_text.split("\n#EXTINF:")
+    video_segment_urls = [l.split('\n')[1] for l in video_segment_lines][1:]
+    video_segments = len(video_segment_urls)
+
+    ### AUDIO
+    has_separate_audio = ("AUDIO=" in target_line)
+    audio_groups = {}
+    audio_index_url = None
+    if has_separate_audio:
+        # get audio index url
+        audio_groups = {group_id(l): uri(l) for l in master_text.split("\n") if l.startswith("#EXT-X-MEDIA:") and "TYPE=AUDIO" in l}
+        audio_index_url = audio_groups[audio(target_line)]
+
+        # get audio index file
+        audio_index_text = unsafe_urlopen(audio_index_url, root=master_url_root).read().decode('utf-8')
+        with open(meta_dir / "audio-index-v1-a1.m3u", 'w') as outfile:
+            outfile.write(audio_index_text)
+
+        # get audio segment urls
+        audio_segment_lines = audio_index_text.split("\n#EXTINF:")
+        audio_segment_urls = [l.split('\n')[1] for l in audio_segment_lines][1:]
+        audio_segments = len(audio_segment_urls)
+
+    # download AES key (may be null)
+    key = download_aes_key(master_url_root, video_index_text, meta_dir)
+
+    download_segments(video_segment_urls, encrypted_video_dir, master_url_root)
+
+    if has_separate_audio:
+        download_segments(audio_segment_urls, encrypted_audio_dir, master_url_root)
+
+    decrypt_segments(video_segments, encrypted_video_dir, video_segments_dir, key)
+
+    if has_separate_audio:
+        decrypt_segments(audio_segments, encrypted_audio_dir, audio_segments_dir, key)
+
+    print("[ ] Processing final video file...")
+    video_file_name = video_dir / "video.ts"
+    concatenate_segments(video_file_name, video_segments, video_segments_dir)
+
+    print("[ ] Processing final audio file...")
+    audio_file_name = None
+    if has_separate_audio:
+        audio_file_name = audio_dir / "audio.ts"
+        concatenate_segments(audio_file_name, audio_segments, audio_segments_dir)
+
+    print("[ ] Converting file with ffmpeg...")
+    outfile_name = str(name_dir / name_dir.name) + ".mp4"
+    subprocess.check_output(["ffmpeg", "-i", video_file_name] + (["-i", audio_file_name] if has_separate_audio else []) + ["-acodec", "copy", "-vcodec", "copy", outfile_name])
     print("[+] Complete.")
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("name")
+    parser.add_argument("master_url")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    master_url = args.master_url
+    name = args.name
+
     if not SAVES.exists():
         os.mkdir(SAVES)
 
-    name = input("Directory name: ")
     name_dir = SAVES / name
     if name_dir.exists():  # NOTE: case-insensitive on Mac
         if input("[?] That name already exists.  Continue anyway? ") not in set('yY'):
@@ -187,10 +281,7 @@ def main():
     else:
         os.mkdir(name_dir)
 
-    master_url = input("Paste URL to master manifest (.m3u file) here: ")
-    assert master_url
-
-    download_segments(master_url, name_dir)
+    download_m3u8(master_url, name_dir)
 
 
 if __name__ == '__main__':
