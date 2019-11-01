@@ -1,0 +1,10 @@
+#!/bin/bash
+
+printf "episode number: "
+read num
+
+printf "raw token line: "
+url=$(python3 as.py)
+
+echo "GitS_S01_E${num}"
+(source ./venv/bin/activate && python3 main.py "GitS_S01_E${num}" "${url}" & &>out)

@@ -13,6 +13,7 @@ import ssl
 import subprocess
 import tempfile
 import concurrent.futures
+import urllib.parse
 import urllib.request
 
 from cryptography.hazmat.backends import default_backend
@@ -21,6 +22,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 ROOT = pathlib.Path(__file__).absolute().parent
 SAVES = ROOT / "saves"
+
+MAX_PROCESSES = 4
 
 
 class SymmetricEncryptionError(Exception):
@@ -91,12 +94,34 @@ def form_segment_filename(segments_dir, index):
     return segments_dir / f"seg{index}.ts"
 
 
+def is_absolute_uri(uri):
+    return bool(urllib.parse.urlparse(uri).netloc)
+
+
+def absolutize_uri(uri, root):
+    if is_absolute_uri(uri):
+        return uri
+    else:
+        p = urllib.parse.urlparse(root)
+        return f"{p.scheme}://{p.netloc}{p.path.rsplit('/', 1)[0]}/{uri}"
+
+
 def unsafe_urlopen(url, root=None):
+    print(f"OPENING: {url} WITH ROOT {root}")
+    if root:
+        url = absolutize_uri(url, root)
+        print(f"NEW URL: {url}")
+
+    # user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
     gcontext = ssl.SSLContext()
+    # headers = {"User-Agent": user_agent}
+    headers = {}
     try:
-        return urllib.request.urlopen(url, context=gcontext)
+        request = urllib.request.Request(url=url, headers=headers)
+        return urllib.request.urlopen(request, context=gcontext)
     except ValueError:
-        return urllib.request.urlopen(root + '/' + url, context=gcontext)
+        request = urllib.request.Request(url=root + '/' + url, headers=headers)
+        return urllib.request.urlopen(request, context=gcontext)
 
 
 def download_segment(index, segment_url, filename, root=None):
@@ -109,7 +134,7 @@ def download_segment(index, segment_url, filename, root=None):
 
 def download_segments(segment_urls, encrypted_dir, master_url_root):
     print("[ ] Downloading encrypted segments in parallel...")
-    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=MAX_PROCESSES) as executor:
         for (index, segment_url) in enumerate(segment_urls):
             executor.submit(download_segment, index, segment_url, form_encrypted_filename(encrypted_dir, index), master_url_root)
     print("[+] Done.")
@@ -138,7 +163,7 @@ def download_aes_key(master_url_root, index_text, meta_dir):
     key = None
     try:
         aes_line = [l for l in index_text.splitlines() if l.startswith("#EXT-X-KEY:")][0]
-        aes_url = aes_line.split('''#EXT-X-KEY:METHOD=AES-128,URI="''')[1].rstrip('"')
+        aes_url = uri(aes_line)
         key = unsafe_urlopen(aes_url, root=master_url_root).read()  # NOTE: keep as bytes!
         with open(meta_dir / "encryption.key", 'wb') as outfile:
             outfile.write(key)
@@ -199,7 +224,7 @@ def download_m3u8(master_url, name_dir):
     master_lines = master_text.split("\n#EXT-X-STREAM-INF:")[1:]
     target_line = max(master_lines, key=lambda l: calc_resolution(l))
     print(f"Target video line: {target_line}")
-    video_index_url = target_line.split('\n')[1]
+    video_index_url = absolutize_uri(target_line.split('\n')[1], master_url_root)
 
     # get video index file
     video_index_text = unsafe_urlopen(video_index_url, root=master_url_root).read().decode('utf-8')
@@ -218,7 +243,7 @@ def download_m3u8(master_url, name_dir):
     if has_separate_audio:
         # get audio index url
         audio_groups = {group_id(l): uri(l) for l in master_text.split("\n") if l.startswith("#EXT-X-MEDIA:") and "TYPE=AUDIO" in l}
-        audio_index_url = audio_groups[audio(target_line)]
+        audio_index_url = absolutize_uri(audio_groups[audio(target_line)], master_url_root)
 
         # get audio index file
         audio_index_text = unsafe_urlopen(audio_index_url, root=master_url_root).read().decode('utf-8')
@@ -231,12 +256,12 @@ def download_m3u8(master_url, name_dir):
         audio_segments = len(audio_segment_urls)
 
     # download AES key (may be null)
-    key = download_aes_key(master_url_root, video_index_text, meta_dir)
+    key = download_aes_key(video_index_url, video_index_text, meta_dir)
 
-    download_segments(video_segment_urls, encrypted_video_dir, master_url_root)
+    download_segments(video_segment_urls, encrypted_video_dir, video_index_url)
 
     if has_separate_audio:
-        download_segments(audio_segment_urls, encrypted_audio_dir, master_url_root)
+        download_segments(audio_segment_urls, encrypted_audio_dir, audio_index_url)
 
     decrypt_segments(video_segments, encrypted_video_dir, video_segments_dir, key)
 
@@ -263,6 +288,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
     parser.add_argument("master_url")
+    parser.add_argument("-s", "--skip", action="store_true")
     return parser.parse_args()
 
 
@@ -276,6 +302,9 @@ def main():
 
     name_dir = SAVES / name
     if name_dir.exists():  # NOTE: case-insensitive on Mac
+        if args.skip:
+            print(f"[*] Skipping pre-existing directory {repr(name)}")
+            return
         if input("[?] That name already exists.  Continue anyway? ") not in set('yY'):
             return
     else:

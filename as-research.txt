@@ -1,0 +1,317 @@
+VIDEO PAGE:
+http://www.adultswim.com/videos/cowboy-bebop/asteroid-blues
+
+MPEG MASTER URL:
+https://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8?hdnts=exp=1570629496~acl=/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/*~id=076081594e1c4f3d9f02b8990c421f2d29196236~hmac=558b6b4a4131e2da99e1f8bed0c3d28acabafb8589da7a83db48615a09b948d4
+
+FROM TOKEN URL:
+https://token.ngtv.io/token/token_spe?format=json&appId=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6ImFzLXR2ZS1kZXNrdG9wLXB0enQ2bSIsInByb2R1Y3QiOiJ0dmUiLCJuZXR3b3JrIjoiYXMiLCJwbGF0Zm9ybSI6ImRlc2t0b3AiLCJpYXQiOjE1MzI3MDIyNzl9.BzSCk-WYOZ2GMCIaeVb8zWnzhlgnXuJTCu0jGp_VaZE&path=%2Fadultswim%2Fae4cb67eaa0fe1666cd8477305c3e204%2Fmaster_bk_de.m3u8&&
+
+VIDEO ID:
+ae4cb67eaa0fe1666cd8477305c3e204
+
+media url / body:
+http://www.adultswim.com/api/shows/v1/media/XagHOmK_TJiJf1451-sCLA/desktop
+
+{
+    "mediaId": "afe567be1526d1858d334333a51d7a5d8dc9d86a",
+    "airingIds": [
+        "RADS1001171900060642",
+        "RADS1004201900084149"
+    ],
+    "lastUpdate": 1569242971185,
+    "network": "AS",
+    "type": "vod",
+    "media": {
+        "desktop": {
+            "multidrm": {
+                "secureUrl": "https://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "url": "http://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "assetId": "ae4cb67eaa0fe1666cd8477305c3e204",
+                "adType": "c4",
+                "playlistProtection": "spe",
+                "contentSegments": [
+                    {
+                        "segmentIdx": 0,
+                        "start": 0,
+                        "duration": 698.7981
+                    },
+                    {
+                        "segmentIdx": 1,
+                        "start": 698.7981,
+                        "duration": 662.9957
+                    }
+                ],
+                "totalRuntime": 1361.7938,
+                "captions": [
+                    {
+                        "type": "608",
+                        "location": "cc1",
+                        "language": "eng"
+                    },
+                    {
+                        "type": "708",
+                        "location": "svc1",
+                        "language": "eng"
+                    }
+                ],
+                "isAVMUX": true
+            },
+            "fairplay": {
+                "secureUrl": "https://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "url": "http://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "assetId": "ae4cb67eaa0fe1666cd8477305c3e204",
+                "adType": "c4",
+                "playlistProtection": "spe",
+                "contentSegments": [
+                    {
+                        "segmentIdx": 0,
+                        "start": 0,
+                        "duration": 698.7981
+                    },
+                    {
+                        "segmentIdx": 1,
+                        "start": 698.7981,
+                        "duration": 662.9957
+                    }
+                ],
+                "totalRuntime": 1361.7938,
+                "captions": [
+                    {
+                        "type": "608",
+                        "location": "cc1",
+                        "language": "eng"
+                    },
+                    {
+                        "type": "708",
+                        "location": "svc1",
+                        "language": "eng"
+                    }
+                ],
+                "isAVMUX": true
+            },
+            "primetime": {
+                "secureUrl": "https://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "url": "http://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "assetId": "ae4cb67eaa0fe1666cd8477305c3e204",
+                "adType": "c4",
+                "playlistProtection": "spe",
+                "contentSegments": [
+                    {
+                        "segmentIdx": 0,
+                        "start": 0,
+                        "duration": 698.7981
+                    },
+                    {
+                        "segmentIdx": 1,
+                        "start": 698.7981,
+                        "duration": 662.9957
+                    }
+                ],
+                "totalRuntime": 1361.7938,
+                "captions": [
+                    {
+                        "type": "608",
+                        "location": "cc1",
+                        "language": "eng"
+                    },
+                    {
+                        "type": "708",
+                        "location": "svc1",
+                        "language": "eng"
+                    }
+                ],
+                "isAVMUX": true
+            },
+            "widevine": {
+                "secureUrl": "https://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "url": "http://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "assetId": "ae4cb67eaa0fe1666cd8477305c3e204",
+                "adType": "c4",
+                "playlistProtection": "spe",
+                "contentSegments": [
+                    {
+                        "segmentIdx": 0,
+                        "start": 0,
+                        "duration": 698.7981
+                    },
+                    {
+                        "segmentIdx": 1,
+                        "start": 698.7981,
+                        "duration": 662.9957
+                    }
+                ],
+                "totalRuntime": 1361.7938,
+                "captions": [
+                    {
+                        "type": "608",
+                        "location": "cc1",
+                        "language": "eng"
+                    },
+                    {
+                        "type": "708",
+                        "location": "svc1",
+                        "language": "eng"
+                    }
+                ],
+                "isAVMUX": true
+            },
+            "bulkaes": {
+                "secureUrl": "https://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "url": "http://tve.cdn.turner.com/adultswim/ae4cb67eaa0fe1666cd8477305c3e204/master_bk_de.m3u8",
+                "assetId": "ae4cb67eaa0fe1666cd8477305c3e204",
+                "adType": "c4",
+                "playlistProtection": "spe",
+                "contentSegments": [
+                    {
+                        "segmentIdx": 0,
+                        "start": 0,
+                        "duration": 698.7981
+                    },
+                    {
+                        "segmentIdx": 1,
+                        "start": 698.7981,
+                        "duration": 662.9957
+                    }
+                ],
+                "totalRuntime": 1361.7938,
+                "captions": [
+                    {
+                        "type": "608",
+                        "location": "cc1",
+                        "language": "eng"
+                    },
+                    {
+                        "type": "708",
+                        "location": "svc1",
+                        "language": "eng"
+                    }
+                ],
+                "isAVMUX": true
+            }
+        }
+    }
+}
+
+video url / body:
+http://www.adultswim.com/api/shows/v1/videos/XagHOmK_TJiJf1451-sCLA?fields=title%2Ctype%2Cduration%2Ccollection_title%2Cposter%2Cstream%2Csegments%2Ctitle_id%2Cauth%2Cmedia_id%2Claunch_date%2Cauth_launch_date%2Cdisable_ads%2Cseason_number%2Cepisode_number
+
+{
+    "status": "ok",
+    "timestamp": 1570629195990,
+    "data": {
+        "video": {
+            "auth": false,
+            "title_id": "344091",
+            "season_number": "1",
+            "type": "episode",
+            "title": "Asteroid Blues",
+            "segments": [],
+            "duration": 1372.2669336,
+            "episode_number": "1",
+            "collection_title": "Cowboy Bebop",
+            "stream": {
+                "duration": 1372.2669336,
+                "assets": [
+                    {
+                        "duration": 1372.2669336,
+                        "mime_type": "application/xml",
+                        "created": 1497457535,
+                        "modified": 1497457535,
+                        "bitrate": "0",
+                        "id": "0JFtQ-RZSSy-_ResvsPrsw",
+                        "filesize": "242",
+                        "closed_captions": true,
+                        "title": "cowboybebop_cc_101_Digital_AsteroidBlues",
+                        "version": 2,
+                        "url": "http://amd.cdn.turner.com/adultswim/episodes/us_geo/cowboybebop/2017/06/cowboybebop_cc_101_Digital_AsteroidBlues/hds/cowboybebop_cc_101_Digital_AsteroidBlues_ad_cue_points_hds.xml"
+                    },
+                    {
+                        "duration": 1372.2669336,
+                        "mime_type": "text/scc",
+                        "created": 1497457535,
+                        "modified": 1497457535,
+                        "bitrate": "0",
+                        "id": "Ecp5EzadQwW1ikq_YucChA",
+                        "filesize": "33232",
+                        "closed_captions": true,
+                        "title": "cowboybebop_cc_101_Digital_AsteroidBlues",
+                        "version": 2,
+                        "url": "http://amd.cdn.turner.com/adultswim/episodes/us_geo/cowboybebop/2017/06/cowboybebop_cc_101_Digital_AsteroidBlues/cc_sidecars/cowboybebop_cc_101_Digital_AsteroidBlues_hls_scenarist.scc"
+                    },
+                    {
+                        "duration": 1372.2669336,
+                        "mime_type": "text/vtt",
+                        "created": 1497457535,
+                        "modified": 1497457535,
+                        "bitrate": "0",
+                        "id": "J0yYEcekRLWtxzxpTqIkjQ",
+                        "filesize": "16792",
+                        "closed_captions": true,
+                        "title": "cowboybebop_cc_101_Digital_AsteroidBlues",
+                        "version": 2,
+                        "url": "http://amd.cdn.turner.com/adultswim/episodes/us_geo/cowboybebop/2017/06/cowboybebop_cc_101_Digital_AsteroidBlues/cc_sidecars/cowboybebop_cc_101_Digital_AsteroidBlues_hls_webvtt.vtt"
+                    },
+                    {
+                        "duration": 1372.2669336,
+                        "mime_type": "application/f4m+xml",
+                        "created": 1497457535,
+                        "modified": 1497457535,
+                        "bitrate": "8628",
+                        "id": "YT_03eSmROSR-9fZwNHXOg",
+                        "filesize": "411",
+                        "closed_captions": true,
+                        "title": "cowboybebop_cc_101_Digital_AsteroidBlues",
+                        "version": 2,
+                        "url": "http://amd.cdn.turner.com/adultswim/episodes/us_geo/cowboybebop/2017/06/cowboybebop_cc_101_Digital_AsteroidBlues/hds/cowboybebop_cc_101_Digital_AsteroidBlues_stream_web.f4m"
+                    },
+                    {
+                        "duration": 1372.2669336,
+                        "mime_type": "application/xml",
+                        "created": 1497457535,
+                        "modified": 1497457535,
+                        "bitrate": "0",
+                        "id": "FIjP-FTcQayo3xmwUePkJw",
+                        "filesize": "346",
+                        "closed_captions": true,
+                        "title": "cowboybebop_cc_101_Digital_AsteroidBlues",
+                        "version": 2,
+                        "url": "http://amd.cdn.turner.com/adultswim/episodes/us_geo/cowboybebop/2017/06/cowboybebop_cc_101_Digital_AsteroidBlues/hls/cowboybebop_cc_101_Digital_AsteroidBlues_ad_cue_points_hls.xml"
+                    },
+                    {
+                        "duration": 1372.2669336,
+                        "mime_type": "application/ttml+xml",
+                        "created": 1497457535,
+                        "modified": 1497457535,
+                        "bitrate": "0",
+                        "id": "9o6CQcOATs2dCMPTqJr-Lg",
+                        "filesize": "65321",
+                        "closed_captions": true,
+                        "title": "cowboybebop_cc_101_Digital_AsteroidBlues",
+                        "version": 2,
+                        "url": "http://amd.cdn.turner.com/adultswim/episodes/us_geo/cowboybebop/2017/06/cowboybebop_cc_101_Digital_AsteroidBlues/cc_sidecars/cowboybebop_cc_101_Digital_AsteroidBlues_hls_smpte_tt.xml"
+                    },
+                    {
+                        "duration": 1372.2669336,
+                        "mime_type": "application/x-mpegURL",
+                        "created": 1497457535,
+                        "modified": 1497457535,
+                        "bitrate": "8628",
+                        "id": "Jz4K_i4lREqoWqKtgs1z-Q",
+                        "filesize": "1622",
+                        "closed_captions": true,
+                        "title": "cowboybebop_cc_101_Digital_AsteroidBlues",
+                        "version": 2,
+                        "url": "http://amd.cdn.turner.com/adultswim/episodes/us_geo/cowboybebop/2017/06/cowboybebop_cc_101_Digital_AsteroidBlues/hls/cowboybebop_cc_101_Digital_AsteroidBlues_stream_full.m3u8"
+                    }
+                ],
+                "type": "streaming"
+            },
+            "media_id": "afe567be1526d1858d334333a51d7a5d8dc9d86a",
+            "id": "XagHOmK_TJiJf1451-sCLA",
+            "launch_date": 1556204400,
+            "poster": "https://i.cdn.turner.com/adultswim/big/video/asteroid-blues/cowboybebop_cc_1_HD_pt1.jpg",
+            "url": "https://www.adultswim.com/videos/cowboy-bebop/asteroid-blues"
+        }
+    }
+}
