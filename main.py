@@ -20,7 +20,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 ROOT = pathlib.Path(__file__).absolute().parent
 SAVES = ROOT / "saves"
 
-
+FFMPEG = "/Users/matt/Applications/ffmpeg"
 
 
 class SymmetricEncryptionError(Exception):
@@ -170,7 +170,7 @@ def download_segments(master_url, name_dir):
         print("    [ ] Converting file with ffmpeg...")
         infile_name = tfile.name
         outfile_name = str(name_dir / name_dir.name) + ".mp4"
-        subprocess.check_output(["ffmpeg", "-i", infile_name, "-acodec", "copy", "-vcodec", "copy", outfile_name])
+        subprocess.check_output([FFMPEG, "-i", infile_name, "-acodec", "copy", "-vcodec", "copy", outfile_name])
         print("    [+] Done.")
     print("[+] Complete.")
 
